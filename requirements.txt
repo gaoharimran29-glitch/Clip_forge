@@ -1,3 +1,4 @@
 yt-dlp==2026.6.9
 langgraph==1.1.10
 pathlib==1.0.1
+faster-whisper==1.2.1

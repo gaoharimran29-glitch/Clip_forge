@@ -5,17 +5,17 @@ from pathlib import Path
 
 def youtube_download(url: str):
     """Downloads the youtube video and audio and returns the metadata"""
-    os.makedirs("videos", exist_ok=True)
-    os.makedirs("audios", exist_ok=True)
+    os.makedirs("outputs/videos", exist_ok=True)
+    os.makedirs("outputs/audios", exist_ok=True)
 
     video_opts = {
         "format": "bestvideo",
-        "outtmpl": "videos/%(title)s.%(ext)s",
+        "outtmpl": "outputs/videos/%(title)s.%(ext)s",
     }
 
     audio_opts = {
     "format": "bestaudio",
-    "outtmpl": "audios/%(title)s.%(ext)s",
+    "outtmpl": "outputs/audios/%(title)s.%(ext)s",
     "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
