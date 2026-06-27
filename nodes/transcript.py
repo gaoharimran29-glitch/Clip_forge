@@ -4,11 +4,10 @@ import os
 from pathlib import Path
 from state import GraphState
 
-def transcribe(audio_path: str):
+def transcribe(audio_path: str , unique_id: str):
     """Generate the transcription for audio of youtube video and save in the json file"""
     
-    audio_file = Path(audio_path)
-    transcript_path = Path("outputs/transcripts") / f"{audio_file.stem}.json"
+    transcript_path = Path("outputs/transcripts") / f"{unique_id}.json"
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
 
     model_size = "medium"
@@ -42,7 +41,7 @@ def transcribe(audio_path: str):
 def transcribe_audio(state: GraphState) -> GraphState:
     """ LangGraph node responsible for transcribing the downloaded audio from youtube video """
 
-    result = transcribe(state["audio_path"])
+    result = transcribe(state["audio_path"] , state["id"])
 
     return {
         **state,
