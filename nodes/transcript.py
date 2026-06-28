@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from state import GraphState
 
-def transcribe(audio_path: str , unique_id: str):
+def transcribe(audio_path: str , unique_id: str , MAX_CHUNK_DURATION = 30):
     """Generate the transcription for audio of youtube video and save in the json file"""
     
     transcript_path = Path("outputs/transcripts") / f"{unique_id}.json"
@@ -20,15 +20,47 @@ def transcribe(audio_path: str , unique_id: str):
 
     transcript = []
 
-    for segment in segments:
-        transcript.append(
-            {
-                "start":segment.start ,
-                "end":segment.end ,
-                "text":segment.text
-            }
-        )
+    current_chunk = {
+        "start": None,
+        "end": None,
+        "text": ""
+    }
 
+    for segment in segments:
+    
+        if current_chunk["start"] is None:
+            current_chunk["start"] = segment.start
+
+        # Add text
+        current_chunk["text"] += " " + segment.text.strip()
+
+        # Update end time
+        current_chunk["end"] = segment.end
+
+        # If chunk reaches 30 seconds, save it
+        if current_chunk["end"] - current_chunk["start"] >= MAX_CHUNK_DURATION:
+
+            transcript.append({
+                "start": current_chunk["start"],
+                "end": current_chunk["end"],
+                "text": current_chunk["text"].strip()
+            })
+
+            # Reset for the next chunk
+            current_chunk = {
+                "start": None,
+                "end": None,
+                "text": ""
+            }
+
+    # Save the final chunk if it contains any text
+    if current_chunk["start"] is not None:
+        transcript.append({
+            "start": current_chunk["start"],
+            "end": current_chunk["end"],
+            "text": current_chunk["text"].strip()
+        })
+    
     with open(transcript_path, "w+", encoding="utf-8") as file:
         json.dump(transcript, file, indent=4, ensure_ascii=False)
 
