@@ -10,4 +10,5 @@ class GraphState(TypedDict, total=False):
     transcript_path: str
     analysis_path: str
     language: str
+    clips: list
     error: str
