@@ -1,22 +1,35 @@
 from faster_whisper import WhisperModel
 import json
-import os
 from pathlib import Path
 from state import GraphState
 
-def transcribe(audio_path: str , unique_id: str , MAX_CHUNK_DURATION: int = 30):
+model_size = "medium"
+
+try:
+    try:
+        model = WhisperModel(model_size, device="cuda", compute_type="int8")
+    except Exception:
+        model = WhisperModel(model_size, device="cpu", compute_type="int8")
+except Exception as e:
+    print(f"An error occurred while loading the Whisper model: {str(e)}")
+    model = None
+
+def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> GraphState:
     """Generate the transcription for audio of youtube video and save in the json file"""
     
-    transcript_path = Path("outputs/transcripts") / f"{unique_id}.json"
+    transcript_path = Path("outputs/transcripts") / f"{state['id']}.json"
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
 
-    model_size = "medium"
+    try:
+        segments, info = model.transcribe(state['audio_path'], beam_size=5)
+        print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
 
-    model = WhisperModel(model_size, device="cpu", compute_type="int8")
-
-    segments, info = model.transcribe(audio_path, beam_size=5)
-
-    print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+    except Exception as e:
+        return {
+        **state ,
+        "success":False ,
+        "error": str(e) , 
+    }
 
     transcript = []
 
@@ -65,17 +78,9 @@ def transcribe(audio_path: str , unique_id: str , MAX_CHUNK_DURATION: int = 30):
         json.dump(transcript, file, indent=4, ensure_ascii=False)
 
     return {
+        **state ,
         "success":True ,
+        "transcript": transcript ,
         "transcript_path": str(transcript_path) , 
         "language": info.language
-    }
-
-def transcribe_audio(state: GraphState) -> GraphState:
-    """ LangGraph node responsible for transcribing the downloaded audio from youtube video """
-
-    result = transcribe(state["audio_path"] , state["id"])
-
-    return {
-        **state,
-        **result,
     }

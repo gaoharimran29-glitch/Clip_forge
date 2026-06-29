@@ -1,4 +1,3 @@
-import json
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -59,16 +58,13 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
     }
 
 
-def get_clips(video_path: str, audio_path: str, analysis_path: str, unique_id: str):
+def clip_generator(state: GraphState) -> GraphState:
     """
     Reads the analysis file and generates the best clips in parallel.
     """
 
-    output_dir = Path("outputs/best_clips") / unique_id
+    output_dir = Path("outputs/best_clips") / state["id"]
     output_dir.mkdir(parents=True, exist_ok=True)
-
-    with open(analysis_path, "r", encoding="utf-8") as file:
-        analysis = json.load(file)
 
     with ThreadPoolExecutor(max_workers=3) as executor:
 
@@ -77,34 +73,26 @@ def get_clips(video_path: str, audio_path: str, analysis_path: str, unique_id: s
                 cut_clip,
                 index,
                 clip,
-                video_path,
-                audio_path,
+                state["video_path"],
+                state["audio_path"],
                 output_dir,
             )
-            for index, clip in enumerate(analysis, start=1)
+            for index, clip in enumerate(state['analysis'], start=1)
         ]
 
-        clips = [future.result() for future in futures]
+        clips = []
+        for index, future in enumerate(futures, start=1):
+            try:
+                result = future.result()
+                clips.append(result)
+            except Exception as e:
+                print(f"Clip {index} failed: {e}")
 
+        if not clips:
+            return {**state , "success": False, "error": "All clips failed"}
+        
     return {
+        **state ,
         "success": True,
         "clips": clips,
-    }
-
-
-def clip_generator(state: GraphState) -> GraphState:
-    """
-    LangGraph node responsible for generating clips.
-    """
-
-    result = get_clips(
-        video_path=state["video_path"],
-        audio_path=state["audio_path"],
-        analysis_path=state["analysis_path"],
-        unique_id=state["id"],
-    )
-
-    return {
-        **state,
-        **result,
     }

@@ -15,10 +15,10 @@ class ClipAnalysis(BaseModel):
 class AnalysisResponse(BaseModel):
     clips: list[ClipAnalysis]
 
-def llm_layer(transcript_path: str, unique_id: str) -> dict:
+def llm_analyze(state: GraphState) -> GraphState:
     """LLM layer to analyze and score each transcript chunk."""
     
-    analysis_path = Path("outputs/analysis") / f"{unique_id}.json"
+    analysis_path = Path("outputs/analysis") / f"{state['id']}.json"
     analysis_path.parent.mkdir(parents=True, exist_ok=True)
 
     error_fallback = {
@@ -27,12 +27,6 @@ def llm_layer(transcript_path: str, unique_id: str) -> dict:
         "analysis_path": "", 
         "error": ""
     }
-
-    if not os.path.exists(transcript_path):
-        return {**error_fallback, "error": f"Transcript file not found: {transcript_path}"}
-
-    with open(transcript_path, "r", encoding="utf-8") as file:
-        data = json.load(file)
 
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     if not GROQ_API_KEY:
@@ -49,13 +43,57 @@ def llm_layer(transcript_path: str, unique_id: str) -> dict:
     structured_model = llm.with_structured_output(AnalysisResponse)
     
     prompt = f"""
-    You are an expert YouTube Shorts editor.
-    You are given transcript chunks from a YouTube video.
-    Analyze EACH chunk and extract engaging hooks or highlights.
+        You are a viral YouTube Shorts editor specializing in both talk/podcast content and music videos.
 
-    Transcript:
-    {json.dumps(data, indent=2, ensure_ascii=False)}
-    """
+        First, determine the content type:
+        - TALK: podcasts, interviews, explainers, vlogs, commentary
+        - MUSIC: songs, music videos, live performances, covers
+
+        Then apply the correct criteria:
+
+        ---
+
+        IF TALK CONTENT:
+        A great Short must have:
+        - A strong HOOK in the first 3 seconds (surprising fact, bold claim, question that demands an answer)
+        - A single clear idea — not multiple topics crammed together
+        - Emotional pull: curiosity, shock, inspiration, controversy, or humor
+        - A satisfying ending — punchline, revelation, or clear takeaway
+
+        REJECT if:
+        - Starts mid-sentence or mid-thought
+        - Is just filler or transitions ("today we're going to talk about...")
+        - Has no clear payoff or resolution
+
+        ---
+
+        IF MUSIC CONTENT:
+        A great Short must have:
+        - Starts at a musically strong point — chorus, drop, key change, or memorable hook
+        - Captures an emotional peak — the most intense, beautiful, or energetic moment
+        - Feels complete — doesn't cut off mid-lyric or mid-phrase awkwardly
+
+        REJECT if:
+        - Starts in the middle of a verse with no energy buildup
+        - Is an intro, outro, or instrumental filler with no vocal or melodic peak
+        - Cuts off before a natural musical pause or phrase ending
+
+        ---
+
+        Score each clip 1-10 where:
+        - 10: Perfect standalone moment, immediately captivating, strong start and end
+        - 7-9: Strong content but entry or exit point could be slightly better
+        - 4-6: Decent moment but lacks a strong opening or natural resolution
+        - 1-3: Weak energy, poor entry point, or no emotional payoff
+
+        In your reason field, specify:
+        - The content type (TALK or MUSIC)
+        - For TALK: name the hook, emotional trigger, and payoff
+        - For MUSIC: name the musical moment (chorus/drop/etc), the emotion it evokes, and why it stands alone well
+
+        Transcript:
+        {json.dumps(state['transcript'], indent=2)}
+        """
     
     try:
         response = structured_model.invoke(prompt)
@@ -71,17 +109,8 @@ def llm_layer(transcript_path: str, unique_id: str) -> dict:
         json.dump(analysis, file, indent=4, ensure_ascii=False)
 
     return {
+        **state ,
         "success": True,
         "analysis": analysis,
-        "analysis_path": str(analysis_path),
-        "error": None
-    }
-
-def llm_analyze(state: GraphState) -> GraphState:
-    """LangGraph node responsible for scoring chunks."""
-    result = llm_layer(state["transcript_path"], state["id"])
-    
-    return {
-        **state,
-        **result,
+        "analysis_path": str(analysis_path)
     }
