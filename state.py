@@ -8,5 +8,6 @@ class GraphState(TypedDict, total=False):
     video_path: str
     audio_path: str
     transcript_path: str
+    analysis_path: str
     language: str
     error: str

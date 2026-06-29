@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from state import GraphState
 
-def transcribe(audio_path: str , unique_id: str , MAX_CHUNK_DURATION = 30):
+def transcribe(audio_path: str , unique_id: str , MAX_CHUNK_DURATION: int = 30):
     """Generate the transcription for audio of youtube video and save in the json file"""
     
     transcript_path = Path("outputs/transcripts") / f"{unique_id}.json"
