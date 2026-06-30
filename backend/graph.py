@@ -1,10 +1,10 @@
 from langgraph.graph import StateGraph, START, END
-from backend.state import GraphState
-from backend.nodes.yt_download import youtube_download
-from backend.nodes.transcript import transcribe_audio
-from backend.nodes.llm_analysis import llm_analyze
-from backend.nodes.cut_clips import clip_generator
-from backend.nodes.cleanup_disk import cleanup
+from state import GraphState
+from nodes.yt_download import youtube_download
+from nodes.transcript import transcribe_audio
+from nodes.llm_analysis import llm_analyze
+from nodes.cut_clips import clip_generator
+from nodes.cleanup_disk import cleanup
 
 builder = StateGraph(GraphState)
 

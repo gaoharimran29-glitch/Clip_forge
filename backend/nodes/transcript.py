@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from backend.state import GraphState
+from state import GraphState
 from langsmith import traceable
 from groq import Groq
 

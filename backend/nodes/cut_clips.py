@@ -2,7 +2,7 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from langsmith import traceable
-from backend.state import GraphState
+from state import GraphState
 
 def cut_clip(index, clip, video_path, audio_path, output_dir):
     """Cuts a single clip and returns its metadata."""

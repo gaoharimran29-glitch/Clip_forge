@@ -1,6 +1,6 @@
 from pathlib import Path
 from langsmith import traceable
-from backend.state import GraphState
+from state import GraphState
 
 @traceable(name="cleanup")
 def cleanup(state: GraphState) -> GraphState:

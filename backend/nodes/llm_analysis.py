@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from pydantic import BaseModel, Field
 from langchain_google_genai import ChatGoogleGenerativeAI
-from backend.state import GraphState
+from state import GraphState
 from langsmith import traceable
 
 class ClipAnalysis(BaseModel):
