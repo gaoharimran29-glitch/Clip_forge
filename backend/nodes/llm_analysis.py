@@ -2,8 +2,9 @@ import json
 import os
 from pathlib import Path
 from pydantic import BaseModel, Field
-from langchain_groq import ChatGroq
-from state import GraphState
+from langchain_google_genai import ChatGoogleGenerativeAI
+from backend.state import GraphState
+from langsmith import traceable
 
 class ClipAnalysis(BaseModel):
     start: float
@@ -15,9 +16,10 @@ class ClipAnalysis(BaseModel):
 class AnalysisResponse(BaseModel):
     clips: list[ClipAnalysis]
 
+@traceable(name="llm_analyze")
 def llm_analyze(state: GraphState) -> GraphState:
     """LLM layer to analyze and score each transcript chunk."""
-    
+    print("LLM Anlaysis Started... ")
     analysis_path = Path("outputs/analysis") / f"{state['id']}.json"
     analysis_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -28,15 +30,13 @@ def llm_analyze(state: GraphState) -> GraphState:
         "error": ""
     }
 
-    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    if not GROQ_API_KEY:
-        return {**error_fallback, "error": "Please setup the GROQ_API_KEY"}
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    if not GEMINI_API_KEY:
+        return {**error_fallback, "error": "Please setup the GEMINI_API_KEY"}
 
-    llm = ChatGroq(
-        groq_api_key=GROQ_API_KEY,
-        model_name="llama-3.1-8b-instant",
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash-lite",
         temperature=0,
-        max_tokens=4096, 
         streaming=False
     )
 

@@ -1,9 +1,10 @@
 from yt_dlp import YoutubeDL
-from state import GraphState
+from backend.state import GraphState
 import os
 import uuid
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from langsmith import traceable
 
 def download_video(url: str , video_opts):
     """Helper function to download the video"""
@@ -23,6 +24,7 @@ def download_audio(url: str , audio_opts):
 
     return audio_path
 
+@traceable(name="youtube_download")
 def youtube_download(state: GraphState) -> GraphState:
     """Downloads the youtube video and audio and returns the metadata"""
     os.makedirs("outputs/videos", exist_ok=True)

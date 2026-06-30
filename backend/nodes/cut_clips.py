@@ -1,9 +1,8 @@
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-
-from state import GraphState
-
+from langsmith import traceable
+from backend.state import GraphState
 
 def cut_clip(index, clip, video_path, audio_path, output_dir):
     """Cuts a single clip and returns its metadata."""
@@ -57,12 +56,12 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
         "video_path": str(output_path),
     }
 
-
+@traceable(name="clip_generator")
 def clip_generator(state: GraphState) -> GraphState:
     """
     Reads the analysis file and generates the best clips in parallel.
     """
-
+    print("Clips Cutting Started... ")
     output_dir = Path("outputs/best_clips") / state["id"]
     output_dir.mkdir(parents=True, exist_ok=True)
 

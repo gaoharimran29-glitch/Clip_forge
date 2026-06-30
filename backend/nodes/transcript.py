@@ -1,28 +1,27 @@
-from faster_whisper import WhisperModel
 import json
 from pathlib import Path
-from state import GraphState
+from backend.state import GraphState
+from langsmith import traceable
+from groq import Groq
 
-model_size = "medium"
-
-try:
-    try:
-        model = WhisperModel(model_size, device="cuda", compute_type="int8")
-    except Exception:
-        model = WhisperModel(model_size, device="cpu", compute_type="int8")
-except Exception as e:
-    print(f"An error occurred while loading the Whisper model: {str(e)}")
-    model = None
-
+@traceable(name="transcribe_audio")
 def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> GraphState:
     """Generate the transcription for audio of youtube video and save in the json file"""
-    
+    print("Transcription Started... ")
     transcript_path = Path("outputs/transcripts") / f"{state['id']}.json"
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
 
+    client = Groq()
+
     try:
-        segments, info = model.transcribe(state['audio_path'], beam_size=5)
-        print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+        with open(state['audio_path'], "rb") as file:
+            transcription = client.audio.transcriptions.create(
+            file=file,
+            model="whisper-large-v3-turbo",
+            response_format="verbose_json",
+            timestamp_granularities = ["segment"],
+            temperature=0.0
+            )
 
     except Exception as e:
         return {
@@ -39,16 +38,16 @@ def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> GraphS
         "text": ""
     }
 
-    for segment in segments:
+    for segment in transcription.segments:
     
         if current_chunk["start"] is None:
-            current_chunk["start"] = segment.start
+            current_chunk["start"] = segment["start"]
 
         # Add text
-        current_chunk["text"] += " " + segment.text.strip()
+        current_chunk["text"] += " " + segment["text"].strip()
 
         # Update end time
-        current_chunk["end"] = segment.end
+        current_chunk["end"] = segment["end"]
 
         # If chunk reaches 30 seconds, save it
         if current_chunk["end"] - current_chunk["start"] >= MAX_CHUNK_DURATION:
@@ -81,6 +80,5 @@ def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> GraphS
         **state ,
         "success":True ,
         "transcript": transcript ,
-        "transcript_path": str(transcript_path) , 
-        "language": info.language
+        "transcript_path": str(transcript_path)
     }
