@@ -2,8 +2,22 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from graph import graph
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="ClipForge API", version="1.0.0")
+
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods (POST, GET, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 class GenerateRequest(BaseModel):
     url: str
