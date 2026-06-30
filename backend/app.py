@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from graph import graph
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="ClipForge API", version="1.0.0")
 
@@ -21,3 +22,9 @@ def generate(request: GenerateRequest):
     })
 
     return result
+
+app.mount(
+    "/outputs",
+    StaticFiles(directory="outputs"),
+    name="outputs",
+)
