@@ -8,7 +8,7 @@ def cleanup(state: GraphState) -> GraphState:
     print("Removing Temporary files...")
 
     try:
-        for path in [state["audio_path"], state["video_path"], state["transcript_path"], state["analysis_path"]]:
+        for path in [state["audio_path"], state["video_path"], state["transcript_path"]]:
             Path(path).unlink(missing_ok=True)
 
         return {
