@@ -33,8 +33,8 @@ def youtube_download(state: GraphState) -> dict:
     unique_id = str(uuid.uuid4())
 
     video_opts = {
-        "format": "bestvideo",
-        "outtmpl": f"outputs/videos/{unique_id}.%(ext)s",
+    "format": "bestvideo[ext=mp4]/bestvideo/best",
+    "outtmpl": f"outputs/videos/{unique_id}.%(ext)s",
     }
 
     audio_opts = {
