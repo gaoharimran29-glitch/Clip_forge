@@ -5,7 +5,7 @@ from langsmith import traceable
 from groq import Groq
 
 @traceable(name="transcribe_audio")
-def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> GraphState:
+def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> dict:
     """Generate the transcription for audio of youtube video and save in the json file"""
     print("Transcription Started... ")
     transcript_path = Path("outputs/transcripts") / f"{state['id']}.json"
@@ -25,7 +25,6 @@ def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> GraphS
 
     except Exception as e:
         return {
-        **state ,
         "success":False ,
         "error": str(e) , 
     }
@@ -77,7 +76,6 @@ def transcribe_audio(state: GraphState , MAX_CHUNK_DURATION: int = 30) -> GraphS
         json.dump(transcript, file, indent=4, ensure_ascii=False)
 
     return {
-        **state ,
         "success":True ,
         "transcript": transcript ,
         "transcript_path": str(transcript_path)

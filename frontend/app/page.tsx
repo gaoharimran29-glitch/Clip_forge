@@ -4,9 +4,12 @@ import { useState } from "react";
 import { Sparkles, Video, Download, Link2, AlertCircle, Play } from "lucide-react";
 
 interface Clip {
-  title: string;
-  description: string;
-  videoUrl: string;
+  id: number;
+  start: number;
+  end: number;
+  score: number;
+  reason: string;
+  clips_path_normalized: string;
 }
 
 export default function Home() {
@@ -31,7 +34,7 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to generate clips. Is your backend running?");
       
       const data = await response.json();
-      setClips(data.clips || data);
+      setClips(data.clips);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An unexpected error occurred.");
@@ -142,7 +145,7 @@ export default function Home() {
                   {/* Smartphone Aspect Preview Box */}
                   <div className="aspect-[9/16] w-full max-w-[240px] mx-auto bg-gray-950 rounded-xl overflow-hidden mb-4 relative shadow-inner border border-gray-800 group-hover/card:border-gray-700 transition-colors">
                     <video
-                      src={clip.videoUrl}
+                      src={`http://127.0.0.1:8000${clip.clips_path_normalized}`}
                       controls
                       className="w-full h-full object-cover"
                       poster="/api/placeholder/240/426" 
@@ -156,16 +159,16 @@ export default function Home() {
 
                   <div className="px-1">
                     <h3 className="font-semibold text-base text-gray-100 line-clamp-1 mb-1 group-hover/card:text-indigo-400 transition-colors">
-                      {clip.title || `Clip #${index + 1}`}
+                    Clip #{clip.id} • Score {clip.score}/10
                     </h3>
                     <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-4">
-                      {clip.description || "No descriptions parsed for this segment."}
+                      {clip.reason || "No descriptions parsed for this segment."}
                     </p>
                   </div>
                 </div>
 
                 <a
-                  href={clip.videoUrl}
+                  href={`http://127.0.0.1:8000${clip.clips_path_normalized}`}
                   download
                   className="flex items-center justify-center gap-2 w-full bg-gray-800 hover:bg-gray-700 text-gray-200 font-medium py-2.5 rounded-xl transition-all text-sm group/btn border border-gray-700/50"
                 >

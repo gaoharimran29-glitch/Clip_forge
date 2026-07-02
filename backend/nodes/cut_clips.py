@@ -12,6 +12,7 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
     duration = end - start
 
     output_path = output_dir / f"clip_{index}.mp4"
+    output_path_normalized = "/" + str(output_path).replace("\\", "/")
 
     command = [
         "ffmpeg",
@@ -53,11 +54,12 @@ def cut_clip(index, clip, video_path, audio_path, output_dir):
         "end": end,
         "score": clip["score"],
         "reason": clip["reason"],
-        "video_path": str(output_path),
+        "clips_path": str(output_path),
+        "clips_path_normalized": str(output_path_normalized)
     }
 
 @traceable(name="clip_generator")
-def clip_generator(state: GraphState) -> GraphState:
+def clip_generator(state: GraphState) -> dict:
     """
     Reads the analysis file and generates the best clips in parallel.
     """
@@ -85,13 +87,9 @@ def clip_generator(state: GraphState) -> GraphState:
                 result = future.result()
                 clips.append(result)
             except Exception as e:
-                print(f"Clip {index} failed: {e}")
-
-        if not clips:
-            return {**state , "success": False, "error": "All clips failed"}
+                return {"success": False , "error": f"Clip Generating error {str(e)}"}
         
     return {
-        **state ,
         "success": True,
         "clips": clips,
     }

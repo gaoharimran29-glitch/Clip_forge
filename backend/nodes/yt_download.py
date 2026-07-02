@@ -25,7 +25,7 @@ def download_audio(url: str , audio_opts):
     return audio_path
 
 @traceable(name="youtube_download")
-def youtube_download(state: GraphState) -> GraphState:
+def youtube_download(state: GraphState) -> dict:
     """Downloads the youtube video and audio and returns the metadata"""
     os.makedirs("outputs/videos", exist_ok=True)
     os.makedirs("outputs/audios", exist_ok=True)
@@ -58,7 +58,6 @@ def youtube_download(state: GraphState) -> GraphState:
             audio_path = audio_future.result()
 
             result = {
-                **state ,
                 "success": True,
                 "id": unique_id ,
                 "title": video_info["title"],
@@ -68,7 +67,6 @@ def youtube_download(state: GraphState) -> GraphState:
         
         except Exception as e:
             result = {
-                **state ,
                 "success": False,
                 "error": str(e),
             }

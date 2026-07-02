@@ -37,8 +37,4 @@ def generate(request: GenerateRequest):
 
     return result
 
-app.mount(
-    "/outputs",
-    StaticFiles(directory="outputs"),
-    name="outputs",
-)
+app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs",)
