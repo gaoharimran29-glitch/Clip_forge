@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from graph import graph
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 app = FastAPI(title="ClipForge API", version="1.0.0")
 
@@ -37,4 +38,5 @@ def generate(request: GenerateRequest):
 
     return result
 
+os.makedirs("outputs", exist_ok=True)
 app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs",)
